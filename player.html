@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watch — IG Viral Video</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #0a0a0f;
+      --bg-card: #111118;
+      --bg-surface: #16161f;
+      --accent: #ff2d55;
+      --accent-glow: rgba(255, 45, 85, 0.35);
+      --accent2: #ff6b00;
+      --text-primary: #f0f0f5;
+      --text-muted: #888898;
+      --border: rgba(255,255,255,0.07);
+      --radius: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg-deep); color: var(--text-primary);
+      font-family: 'Barlow', sans-serif; min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ── ADBLOCK OVERLAY ── */
+    #adblock-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(10,10,15,0.97);
+      z-index: 9999; align-items: center; justify-content: center;
+      flex-direction: column; text-align: center; padding: 24px;
+    }
+    #adblock-overlay.show { display: flex; }
+    .adblock-icon { font-size: 64px; margin-bottom: 20px; }
+    .adblock-title {
+      font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 6vw, 48px);
+      color: var(--accent); letter-spacing: 2px; margin-bottom: 12px;
+    }
+    .adblock-desc { font-size: 16px; color: var(--text-muted); max-width: 480px; line-height: 1.6; margin-bottom: 28px; }
+    .adblock-steps {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 28px; text-align: left; margin-bottom: 24px;
+    }
+    .adblock-steps li { color: var(--text-primary); margin: 8px 0; font-size: 15px; }
+    .btn-retry {
+      background: var(--accent); color: #fff; border: none;
+      padding: 12px 36px; border-radius: 50px; font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: 'Barlow', sans-serif; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-retry:hover { transform: scale(1.05); box-shadow: 0 0 24px var(--accent-glow); }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,15,0.92); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-decoration: none;
+    }
+    .nav-back {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--text-muted); text-decoration: none; font-size: 14px; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--text-primary); }
+
+    /* ── PAGE LAYOUT ── */
+    .page-wrap {
+      max-width: 1280px; margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+    }
+
+    /* ── VIDEO SECTION ── */
+    .video-section {}
+
+    /* ── CUSTOM PLAYER ── */
+    .player-container {
+      position: relative;
+      background: #000; border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+
+    .player-container video {
+      width: 100%; display: block;
+      max-height: 70vh;
+    }
+
+    /* Skip indicators */
+    .skip-indicator {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 80px; height: 80px;
+      background: rgba(255,255,255,0.18); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: #fff; font-weight: 700;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .skip-indicator.left { left: 16px; }
+    .skip-indicator.right { right: 16px; }
+    .skip-indicator.show { opacity: 1; }
+
+    /* Custom Controls */
+    .custom-controls {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+      padding: 40px 16px 14px;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .player-container:hover .custom-controls,
+    .player-container.controls-visible .custom-controls { opacity: 1; }
+
+    .progress-bar-wrap {
+      position: relative; height: 4px; background: rgba(255,255,255,0.2);
+      border-radius: 2px; cursor: pointer; margin-bottom: 12px;
+      transition: height 0.15s;
+    }
+    .progress-bar-wrap:hover { height: 7px; }
+    .progress-fill {
+      height: 100%; background: var(--accent);
+      border-radius: 2px; width: 0%;
+      transition: width 0.1s linear;
+      pointer-events: none;
+    }
+    .progress-thumb {
+      position: absolute; top: 50%; right: -6px; transform: translateY(-50%);
+      width: 14px; height: 14px; background: var(--accent);
+      border-radius: 50%; opacity: 0; transition: opacity 0.15s;
+      pointer-events: none;
+    }
+    .progress-bar-wrap:hover .progress-thumb { opacity: 1; }
+
+    .controls-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .controls-left, .controls-right { display: flex; align-items: center; gap: 10px; }
+
+    .ctrl-btn {
+      background: none; border: none; color: #fff; cursor: pointer;
+      padding: 5px; border-radius: 6px; font-size: 18px; line-height: 1;
+      transition: background 0.15s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ctrl-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.1); }
+    .ctrl-btn svg { width: 20px; height: 20px; fill: #fff; }
+
+    .time-display { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 500; white-space: nowrap; }
+
+    .volume-wrap { display: flex; align-items: center; gap: 6px; }
+    .volume-slider {
+      -webkit-appearance: none; appearance: none;
+      width: 70px; height: 3px; border-radius: 2px;
+      background: rgba(255,255,255,0.3); outline: none; cursor: pointer;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 12px; height: 12px;
+      border-radius: 50%; background: #fff; cursor: pointer;
+    }
+
+    /* ── VIDEO BLOCKED MESSAGE ── */
+    #video-blocked {
+      display: none;
+      position: absolute; inset: 0;
+      background: rgba(10,10,15,0.95);
+      align-items: center; justify-content: center;
+      flex-direction: column; text-align: center; padding: 24px;
+      z-index: 5;
+    }
+    #video-blocked.show { display: flex; }
+    #video-blocked .block-icon { font-size: 52px; margin-bottom: 16px; }
+    #video-blocked h3 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--accent); letter-spacing: 2px; margin-bottom: 8px; }
+    #video-blocked p { color: var(--text-muted); font-size: 15px; max-width: 340px; }
+
+    /* ── AD WATCH BUTTON ── */
+    .ad-watch-bar {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 14px; gap: 12px; flex-wrap: wrap;
+    }
+    .ad-watch-text { font-size: 13px; color: var(--text-muted); }
+    .ad-watch-text strong { color: var(--text-primary); }
+    .btn-watch-ad {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; padding: 9px 22px; border-radius: 50px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: 'Barlow', sans-serif; white-space: nowrap;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-watch-ad:hover { transform: scale(1.04); box-shadow: 0 0 20px var(--accent-glow); }
+
+    /* ── VIDEO INFO ── */
+    .video-info { margin-top: 20px; }
+    .video-title {
+      font-size: clamp(18px, 3vw, 24px); font-weight: 700; line-height: 1.3; margin-bottom: 12px;
+    }
+    .video-meta-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .video-stats { font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; }
+    .video-actions { display: flex; gap: 10px; }
+    .action-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      color: var(--text-primary); padding: 7px 16px; border-radius: 50px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      font-family: 'Barlow', sans-serif; transition: all 0.2s;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn.liked { background: rgba(255,45,85,0.12); border-color: var(--accent); color: var(--accent); }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    .video-description {
+      font-size: 14px; line-height: 1.7; color: var(--text-muted);
+      background: var(--bg-surface); border-radius: var(--radius);
+      padding: 16px; border: 1px solid var(--border);
+    }
+
+    /* ── AD BELOW VIDEO ── */
+    .ad-below {
+      margin-top: 20px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+      min-height: 90px; display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); font-size: 13px;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar { }
+    .sidebar-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px; letter-spacing: 2px; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-title::before {
+      content: ''; display: block; width: 4px; height: 18px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2)); border-radius: 2px;
+    }
+
+    .related-card {
+      display: flex; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      text-decoration: none; color: inherit;
+      transition: opacity 0.2s;
+    }
+    .related-card:hover { opacity: 0.75; }
+    .related-card:last-child { border-bottom: none; }
+
+    .related-thumb {
+      flex-shrink: 0; width: 130px; aspect-ratio: 16/9;
+      border-radius: 6px; overflow: hidden; background: #0d0d16;
+      position: relative;
+    }
+    .related-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .related-thumb .dur { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.8); color: #fff; font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+
+    .related-info { flex: 1; min-width: 0; }
+    .related-title { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .related-meta { font-size: 11px; color: var(--text-muted); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .page-wrap { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; }
+      .page-wrap { padding: 16px; gap: 16px; }
+      .volume-wrap { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Adblock Overlay -->
+<div id="adblock-overlay">
+  <div class="adblock-icon">🚫</div>
+  <div class="adblock-title">Ad Blocker Detected</div>
+  <p class="adblock-desc">Please disable your ad blocker to watch videos. We use non-intrusive ads to keep this platform free.</p>
+  <div class="adblock-steps">
+    <ol style="padding-left:18px">
+      <li>Click the ad blocker icon in your browser toolbar</li>
+      <li>Select "Disable on this site" or "Pause"</li>
+      <li>Refresh the page</li>
+    </ol>
+  </div>
+  <button class="btn-retry" onclick="checkAdBlock()">✓ I've disabled it — Retry</button>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html" class="nav-logo">IG<span style="-webkit-text-fill-color:#fff">·</span>VIRAL</a>
+  <a href="index.html" class="nav-back">← Back to Videos</a>
+</nav>
+
+<!-- Page -->
+<div class="page-wrap">
+
+  <!-- Left: Video + Info -->
+  <div class="video-section">
+
+    <!-- Player -->
+    <div class="player-container" id="player-container">
+
+      <!-- Video Blocked -->
+      <div id="video-blocked">
+        <div class="block-icon">🔒</div>
+        <h3>Ad Blocker Detected</h3>
+        <p>Please disable your ad blocker to watch this video.</p>
+      </div>
+
+      <!-- Skip Indicators -->
+      <div class="skip-indicator left" id="skip-back">⏪ 10s</div>
+      <div class="skip-indicator right" id="skip-fwd">10s ⏩</div>
+
+      <video id="main-video" preload="metadata"></video>
+
+      <!-- Custom Controls -->
+      <div class="custom-controls" id="custom-controls">
+        <div class="progress-bar-wrap" id="progress-wrap" onclick="seekVideo(event)">
+          <div class="progress-fill" id="progress-fill">
+            <div class="progress-thumb"></div>
+          </div>
+        </div>
+        <div class="controls-row">
+          <div class="controls-left">
+            <button class="ctrl-btn" id="play-pause-btn" onclick="togglePlay()" title="Play/Pause">
+              <svg id="pp-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <button class="ctrl-btn" onclick="skip(-10)" title="Rewind 10s">
+              <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/><text x="8" y="16" font-size="6" fill="white" font-family="Barlow,sans-serif" font-weight="700">10</text></svg>
+            </button>
+            <button class="ctrl-btn" onclick="skip(10)" title="Forward 10s">
+              <svg viewBox="0 0 24 24"><path d="M18 13c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6v4l5-5-5-5v4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8h-2z"/><text x="9" y="16" font-size="6" fill="white" font-family="Barlow,sans-serif" font-weight="700">10</text></svg>
+            </button>
+            <div class="volume-wrap">
+              <button class="ctrl-btn" onclick="toggleMute()" title="Mute">
+                <svg id="vol-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+              </button>
+              <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.05" value="1" oninput="setVolume(this.value)" />
+            </div>
+            <span class="time-display" id="time-display">0:00 / 0:00</span>
+          </div>
+          <div class="controls-right">
+            <button class="ctrl-btn" onclick="toggleFullscreen()" title="Fullscreen">
+              <svg id="fs-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Watch Ad Option -->
+    <div class="ad-watch-bar" id="ad-watch-bar" style="display:none">
+      <div class="ad-watch-text"><strong>Enjoying the video?</strong> Watch a short ad to support us — totally optional!</div>
+      <button class="btn-watch-ad" onclick="watchAd()">▶ Watch Short Ad</button>
+    </div>
+
+    <!-- Video Info -->
+    <div class="video-info">
+      <div class="video-title" id="video-title">Loading…</div>
+      <div class="video-meta-row">
+        <div class="video-stats">
+          <span id="video-views">— views</span>
+          <span id="video-date">—</span>
+          <span id="video-category" style="color:var(--accent)">—</span>
+        </div>
+        <div class="video-actions">
+          <button class="action-btn" id="like-btn" onclick="toggleLike()">👍 Like</button>
+          <button class="action-btn" onclick="shareVideo()">🔗 Share</button>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="video-description" id="video-desc">
+        Watch this amazing viral video. Subscribe to stay updated with the latest trending content!
+      </div>
+    </div>
+
+    <!-- Ad Below Video -->
+    <div class="ad-below">
+      <span class="ad-label" style="font-size:10px;border:1px solid var(--border);padding:1px 6px;border-radius:3px;margin-right:10px;color:var(--text-muted)">AD</span>
+      Advertisement Space — 728×90 Banner
+    </div>
+
+  </div>
+
+  <!-- Sidebar: Related Videos -->
+  <div class="sidebar">
+    <div class="sidebar-title">Up Next</div>
+    <div id="related-list"></div>
+  </div>
+
+</div>
+
+<script>
+/* ── DATA ── */
+const STORAGE_KEY = 'igviral_videos';
+
+function getVideos() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) return JSON.parse(raw);
+  return [
+    { id:'1', title:'Epic Skateboard Trick Goes Viral 🛹', category:'Trending', views:'2.4M', duration:'1:32', date:'2 hours ago', thumb:'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'2', title:'Funniest Pet Compilation 2025 😂', category:'Funny', views:'5.1M', duration:'3:48', date:'5 hours ago', thumb:'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'3', title:'Unbelievable Last-Minute Goal — World Cup Qualifier', category:'Sports', views:'8.9M', duration:'0:47', date:'1 day ago', thumb:'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'4', title:'New Artist Drops Insane Beat — Music Video', category:'Music', views:'1.3M', duration:'4:12', date:'3 days ago', thumb:'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'5', title:'AI Robot Does Something Incredible — Watch Till End', category:'Tech', views:'3.7M', duration:'2:05', date:'4 days ago', thumb:'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'6', title:'Satisfying Food Compilation 🍜 ASMR Cooking', category:'Lifestyle', views:'920K', duration:'6:30', date:'5 days ago', thumb:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'7', title:'Street Basketball Insane Dunks 🏀', category:'Sports', views:'4.2M', duration:'2:58', date:'6 days ago', thumb:'https://images.unsplash.com/photo-1546519638399-1274d887159f?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'8', title:'Tesla FSD Nearly Perfect Autopilot Drive 🚗', category:'Tech', views:'2.1M', duration:'5:44', date:'1 week ago', thumb:'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' }
+  ];
+}
+
+/* ── LOAD VIDEO ── */
+const params = new URLSearchParams(location.search);
+const videoId = params.get('id') || '1';
+const videos = getVideos();
+const video = videos.find(v => v.id === videoId) || videos[0];
+
+const videoEl = document.getElementById('main-video');
+const ppIcon = document.getElementById('pp-icon');
+const progressFill = document.getElementById('progress-fill');
+const timeDisplay = document.getElementById('time-display');
+
+function initVideo() {
+  document.title = `${video.title} — IG Viral Video`;
+  document.getElementById('video-title').textContent = video.title;
+  document.getElementById('video-views').textContent = `👁 ${video.views} views`;
+  document.getElementById('video-date').textContent = video.date;
+  document.getElementById('video-category').textContent = `#${video.category}`;
+
+  videoEl.src = video.src;
+  videoEl.poster = video.thumb;
+
+  // Related
+  const related = videos.filter(v => v.id !== video.id);
+  document.getElementById('related-list').innerHTML = related.map(v => `
+    <a class="related-card" href="player.html?id=${v.id}">
+      <div class="related-thumb">
+        <img src="${v.thumb}" alt="${v.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x73/111118/444?text=Video'" />
+        <span class="dur">${v.duration}</span>
+      </div>
+      <div class="related-info">
+        <div class="related-title">${v.title}</div>
+        <div class="related-meta">👁 ${v.views} · ${v.date}</div>
+      </div>
+    </a>
+  `).join('');
+
+  // Show watch-ad bar after 5s
+  setTimeout(() => {
+    document.getElementById('ad-watch-bar').style.display = 'flex';
+  }, 5000);
+}
+
+/* ── PLAYER CONTROLS ── */
+let isPlaying = false;
+let isMuted = false;
+
+function togglePlay() {
+  if (videoEl.paused) {
+    videoEl.play().catch(() => {});
+    ppIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+    isPlaying = true;
+  } else {
+    videoEl.pause();
+    ppIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    isPlaying = false;
+  }
+}
+
+videoEl.addEventListener('click', togglePlay);
+
+videoEl.addEventListener('timeupdate', () => {
+  if (!videoEl.duration) return;
+  const pct = (videoEl.currentTime / videoEl.duration) * 100;
+  progressFill.style.width = pct + '%';
+  timeDisplay.textContent = `${fmt(videoEl.currentTime)} / ${fmt(videoEl.duration)}`;
+});
+
+videoEl.addEventListener('ended', () => {
+  ppIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+  isPlaying = false;
+});
+
+function seekVideo(e) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  videoEl.currentTime = pct * videoEl.duration;
+}
+
+function skip(secs) {
+  videoEl.currentTime = Math.max(0, Math.min(videoEl.duration || 0, videoEl.currentTime + secs));
+  showSkipIndicator(secs < 0 ? 'back' : 'fwd');
+}
+
+function showSkipIndicator(dir) {
+  const el = document.getElementById(dir === 'back' ? 'skip-back' : 'skip-fwd');
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 700);
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  videoEl.muted = isMuted;
+  const icon = document.getElementById('vol-icon');
+  if (isMuted) {
+    icon.innerHTML = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+  } else {
+    icon.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+  }
+}
+
+function setVolume(val) {
+  videoEl.volume = parseFloat(val);
+  if (val == 0) {
+    isMuted = true; videoEl.muted = true;
+  } else if (isMuted) {
+    isMuted = false; videoEl.muted = false;
+  }
+}
+
+function toggleFullscreen() {
+  const container = document.getElementById('player-container');
+  if (!document.fullscreenElement) {
+    container.requestFullscreen?.() || container.webkitRequestFullscreen?.();
+    document.getElementById('fs-icon').innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
+  } else {
+    document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+    document.getElementById('fs-icon').innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+  }
+}
+
+/* ── DOUBLE TAP SKIP ── */
+let lastTap = 0, lastTapSide = null;
+document.getElementById('player-container').addEventListener('click', (e) => {
+  const now = Date.now();
+  const container = e.currentTarget;
+  const rect = container.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const side = x < rect.width / 2 ? 'left' : 'right';
+  if (now - lastTap < 300 && lastTapSide === side) {
+    skip(side === 'left' ? -10 : 10);
+    lastTap = 0;
+    return;
+  }
+  lastTap = now;
+  lastTapSide = side;
+});
+
+/* ── TOUCH DOUBLE TAP ── */
+let touchTapCount = 0, touchTimer, touchSide;
+document.getElementById('player-container').addEventListener('touchend', (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const x = e.changedTouches[0].clientX - rect.left;
+  const side = x < rect.width / 2 ? 'left' : 'right';
+  touchTapCount++;
+  clearTimeout(touchTimer);
+  if (touchTapCount === 2 && touchSide === side) {
+    skip(side === 'left' ? -10 : 10);
+    touchTapCount = 0;
+    return;
+  }
+  touchSide = side;
+  touchTimer = setTimeout(() => { touchTapCount = 0; }, 300);
+});
+
+/* ── KEYBOARD SHORTCUTS ── */
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft') skip(-10);
+  if (e.code === 'ArrowRight') skip(10);
+  if (e.code === 'KeyM') toggleMute();
+  if (e.code === 'KeyF') toggleFullscreen();
+});
+
+/* ── AUTO-HIDE CONTROLS ── */
+let hideTimer;
+const playerEl = document.getElementById('player-container');
+playerEl.addEventListener('mousemove', () => {
+  playerEl.classList.add('controls-visible');
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => playerEl.classList.remove('controls-visible'), 2500);
+});
+
+/* ── LIKE ── */
+function toggleLike() {
+  const btn = document.getElementById('like-btn');
+  btn.classList.toggle('liked');
+  btn.textContent = btn.classList.contains('liked') ? '❤️ Liked' : '👍 Like';
+}
+
+/* ── SHARE ── */
+function shareVideo() {
+  if (navigator.share) {
+    navigator.share({ title: video.title, url: location.href });
+  } else {
+    navigator.clipboard.writeText(location.href).then(() => alert('Link copied!'));
+  }
+}
+
+/* ── WATCH AD ── */
+function watchAd() {
+  alert('🎬 A short ad would play here via Adsterra or similar.\nThank you for supporting IG Viral Video!');
+}
+
+/* ── FORMAT TIME ── */
+function fmt(s) {
+  if (isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+/* ── ADBLOCK DETECTION ── */
+function checkAdBlock() {
+  const testAd = document.createElement('div');
+  testAd.innerHTML = '&nbsp;';
+  testAd.className = 'adsbox ad-slot pub_300x250';
+  testAd.style.cssText = 'width:1px;height:1px;position:absolute;left:-9999px';
+  document.body.appendChild(testAd);
+  setTimeout(() => {
+    const blocked = testAd.offsetHeight === 0 || testAd.offsetWidth === 0 ||
+      window.getComputedStyle(testAd).display === 'none' ||
+      window.getComputedStyle(testAd).visibility === 'hidden';
+    document.body.removeChild(testAd);
+    if (blocked) {
+      document.getElementById('adblock-overlay').classList.add('show');
+      document.getElementById('video-blocked').classList.add('show');
+      videoEl.pause();
+    } else {
+      document.getElementById('adblock-overlay').classList.remove('show');
+      document.getElementById('video-blocked').classList.remove('show');
+    }
+  }, 200);
+}
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', () => {
+  initVideo();
+  setTimeout(checkAdBlock, 600);
+});
+</script>
+</body>
+</html>

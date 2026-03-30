@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — IG Viral Video</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #0a0a0f;
+      --bg-card: #111118;
+      --bg-surface: #16161f;
+      --accent: #ff2d55;
+      --accent-glow: rgba(255, 45, 85, 0.35);
+      --accent2: #ff6b00;
+      --accent-green: #00d68f;
+      --text-primary: #f0f0f5;
+      --text-muted: #888898;
+      --border: rgba(255,255,255,0.07);
+      --radius: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg-deep); color: var(--text-primary);
+      font-family: 'Barlow', sans-serif; min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ── LOGIN OVERLAY ── */
+    #login-overlay {
+      position: fixed; inset: 0;
+      background: var(--bg-deep);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; padding: 24px;
+    }
+    #login-overlay.hidden { display: none; }
+
+    .login-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 48px 40px;
+      width: 100%; max-width: 400px; text-align: center;
+    }
+    .login-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 4px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 6px;
+    }
+    .login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 36px; }
+    .login-label { display: block; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 7px; }
+    .login-input {
+      width: 100%; background: var(--bg-surface); border: 1px solid var(--border);
+      color: var(--text-primary); padding: 12px 16px; border-radius: 8px;
+      font-size: 15px; font-family: 'Barlow', sans-serif; outline: none;
+      transition: border-color 0.2s; margin-bottom: 18px;
+    }
+    .login-input:focus { border-color: var(--accent); }
+    .login-btn {
+      width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; padding: 13px; border-radius: 50px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: 'Barlow', sans-serif; letter-spacing: 1px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .login-btn:hover { transform: scale(1.02); box-shadow: 0 0 24px var(--accent-glow); }
+    .login-error {
+      background: rgba(255,45,85,0.12); border: 1px solid rgba(255,45,85,0.3);
+      color: var(--accent); padding: 10px; border-radius: 8px; font-size: 13px;
+      margin-top: 14px; display: none;
+    }
+    .login-error.show { display: block; }
+    .login-hint { font-size: 12px; color: var(--text-muted); margin-top: 16px; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,15,0.92); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-decoration: none;
+    }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .nav-pill {
+      background: rgba(255,45,85,0.12); border: 1px solid rgba(255,45,85,0.25);
+      color: var(--accent); padding: 5px 14px; border-radius: 50px; font-size: 12px; font-weight: 600;
+    }
+    .nav-logout {
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      padding: 6px 16px; border-radius: 50px; font-size: 13px; cursor: pointer;
+      font-family: 'Barlow', sans-serif; transition: all 0.2s;
+    }
+    .nav-logout:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-home {
+      color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-home:hover { color: var(--text-primary); }
+
+    /* ── LAYOUT ── */
+    .admin-wrap {
+      max-width: 1100px; margin: 0 auto; padding: 28px 24px;
+      display: grid; grid-template-columns: 1fr 380px; gap: 24px;
+    }
+
+    /* ── SECTIONS ── */
+    .panel-title {
+      font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .panel-title::before {
+      content: ''; display: block; width: 4px; height: 20px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2)); border-radius: 2px;
+    }
+
+    /* ── UPLOAD FORM ── */
+    .upload-form {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block; font-size: 12px; font-weight: 600; color: var(--text-muted);
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; background: var(--bg-surface); border: 1px solid var(--border);
+      color: var(--text-primary); padding: 11px 14px; border-radius: 8px;
+      font-size: 14px; font-family: 'Barlow', sans-serif; outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+    .form-select { cursor: pointer; }
+    .form-textarea { height: 80px; resize: vertical; }
+
+    .form-select option { background: var(--bg-surface); }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: 10px;
+      padding: 32px 20px; text-align: center;
+      cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent); background: rgba(255,45,85,0.05);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;
+    }
+    .drop-icon { font-size: 36px; margin-bottom: 10px; }
+    .drop-text { font-size: 14px; color: var(--text-muted); }
+    .drop-text strong { color: var(--accent); }
+    .drop-note { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+    /* Thumbnail Options */
+    .thumb-options {
+      display: flex; gap: 10px; margin-bottom: 12px;
+    }
+    .thumb-option {
+      flex: 1; padding: 10px; border: 1px solid var(--border);
+      border-radius: 8px; text-align: center; cursor: pointer;
+      font-size: 13px; color: var(--text-muted); transition: all 0.2s;
+      background: var(--bg-surface);
+    }
+    .thumb-option:hover, .thumb-option.active {
+      border-color: var(--accent); color: var(--accent); background: rgba(255,45,85,0.08);
+    }
+
+    /* Preview */
+    .thumb-preview {
+      border-radius: 8px; overflow: hidden; aspect-ratio: 16/9;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); font-size: 13px; position: relative;
+    }
+    .thumb-preview img {
+      width: 100%; height: 100%; object-fit: cover;
+      display: none;
+    }
+    .thumb-preview img.show { display: block; }
+    .thumb-preview .gen-btn {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(0,0,0,0.75); color: #fff; border: none;
+      padding: 5px 12px; border-radius: 50px; font-size: 11px; cursor: pointer;
+      font-family: 'Barlow', sans-serif; font-weight: 600;
+    }
+
+    /* Cloudinary URL input */
+    .cloud-row { display: flex; gap: 10px; align-items: flex-start; }
+    .cloud-row .form-input { flex: 1; }
+    .cloud-test-btn {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      color: var(--text-muted); padding: 11px 14px; border-radius: 8px;
+      cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 13px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .cloud-test-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    .submit-btn {
+      width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; padding: 14px; border-radius: 50px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: 'Barlow', sans-serif; letter-spacing: 1px;
+      transition: transform 0.2s, box-shadow 0.2s; margin-top: 6px;
+    }
+    .submit-btn:hover { transform: scale(1.02); box-shadow: 0 0 24px var(--accent-glow); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Success */
+    #upload-success {
+      display: none; background: rgba(0,214,143,0.1); border: 1px solid rgba(0,214,143,0.3);
+      color: var(--accent-green); border-radius: 8px; padding: 14px; text-align: center;
+      margin-top: 14px; font-size: 14px; font-weight: 600;
+    }
+    #upload-success.show { display: block; }
+
+    /* ── VIDEO LIST ── */
+    .video-list-panel {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px; max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+    .video-list-panel::-webkit-scrollbar { width: 5px; }
+    .video-list-panel::-webkit-scrollbar-track { background: transparent; }
+    .video-list-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .stats-row {
+      display: flex; gap: 12px; margin-bottom: 20px;
+    }
+    .stat-box {
+      flex: 1; background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px; text-align: center;
+    }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 1px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .admin-video-item {
+      display: flex; gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+    .admin-video-item:last-child { border-bottom: none; }
+    .admin-thumb {
+      flex-shrink: 0; width: 100px; aspect-ratio: 16/9;
+      border-radius: 6px; overflow: hidden; background: var(--bg-surface);
+    }
+    .admin-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .admin-item-info { flex: 1; min-width: 0; }
+    .admin-item-title { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .admin-item-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+    .admin-item-actions { display: flex; gap: 6px; }
+    .admin-btn-sm {
+      padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 600;
+      cursor: pointer; font-family: 'Barlow', sans-serif; border: 1px solid var(--border);
+      background: none; color: var(--text-muted); transition: all 0.2s;
+    }
+    .admin-btn-sm.view { color: var(--accent2); border-color: rgba(255,107,0,0.3); }
+    .admin-btn-sm.view:hover { background: rgba(255,107,0,0.1); }
+    .admin-btn-sm.del { color: var(--accent); border-color: rgba(255,45,85,0.3); }
+    .admin-btn-sm.del:hover { background: rgba(255,45,85,0.1); }
+
+    .empty-list { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 14px; }
+
+    @media (max-width: 900px) {
+      .admin-wrap { grid-template-columns: 1fr; }
+      .video-list-panel { max-height: none; }
+    }
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; }
+      .admin-wrap { padding: 16px; }
+      .upload-form, .video-list-panel { padding: 20px; }
+      .login-box { padding: 36px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">IG VIRAL VIDEO</div>
+    <div class="login-sub">Admin Panel — Restricted Access</div>
+    <label class="login-label">Username</label>
+    <input class="login-input" type="text" id="login-user" placeholder="admin" />
+    <label class="login-label">Password</label>
+    <input class="login-input" type="password" id="login-pass" placeholder="••••••••" onkeypress="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" onclick="doLogin()">🔐 Sign In</button>
+    <div class="login-error" id="login-error">Incorrect credentials. Try again.</div>
+    <div class="login-hint">Demo credentials: <strong>admin</strong> / <strong>admin123</strong></div>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html" class="nav-logo">IG<span style="-webkit-text-fill-color:#fff">·</span>VIRAL</a>
+  <div class="nav-right">
+    <span class="nav-pill">⚙ Admin</span>
+    <a href="index.html" class="nav-home">← Home</a>
+    <button class="nav-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<!-- Admin Content -->
+<div class="admin-wrap">
+
+  <!-- Upload Form -->
+  <div>
+    <div class="panel-title">Upload New Video</div>
+    <div class="upload-form">
+
+      <!-- Video Title -->
+      <div class="form-group">
+        <label class="form-label">Video Title *</label>
+        <input class="form-input" type="text" id="v-title" placeholder="Enter a catchy video title…" />
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label class="form-label">Category *</label>
+        <select class="form-select" id="v-category">
+          <option value="">Select category…</option>
+          <option value="Trending">🔥 Trending</option>
+          <option value="Funny">😂 Funny</option>
+          <option value="Sports">⚽ Sports</option>
+          <option value="Music">🎵 Music</option>
+          <option value="Tech">💻 Tech</option>
+          <option value="Lifestyle">✨ Lifestyle</option>
+        </select>
+      </div>
+
+      <!-- Video Source (Cloudinary URL) -->
+      <div class="form-group">
+        <label class="form-label">Video URL (Cloudinary / Direct Link) *</label>
+        <div class="cloud-row">
+          <input class="form-input" type="text" id="v-src" placeholder="https://res.cloudinary.com/…/video.mp4" />
+          <button class="cloud-test-btn" onclick="testVideoURL()">▶ Test</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Paste your Cloudinary video URL, or any direct .mp4 link</div>
+      </div>
+
+      <!-- Duration -->
+      <div class="form-group">
+        <label class="form-label">Duration (e.g. 2:30)</label>
+        <input class="form-input" type="text" id="v-duration" placeholder="0:00" style="max-width:140px" />
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">Description (optional)</label>
+        <textarea class="form-textarea" id="v-desc" placeholder="Brief description of the video…"></textarea>
+      </div>
+
+      <!-- Thumbnail -->
+      <div class="form-group">
+        <label class="form-label">Thumbnail</label>
+        <div class="thumb-options">
+          <div class="thumb-option active" id="thumb-opt-auto" onclick="setThumbMode('auto')">🎞 Auto-generate</div>
+          <div class="thumb-option" id="thumb-opt-url" onclick="setThumbMode('url')">🔗 URL</div>
+          <div class="thumb-option" id="thumb-opt-upload" onclick="setThumbMode('upload')">📁 Upload</div>
+        </div>
+
+        <!-- Auto Generate -->
+        <div id="thumb-auto-section">
+          <div class="thumb-preview" id="thumb-preview">
+            <span id="thumb-placeholder">🖼 Auto-generated from video frame</span>
+            <img id="thumb-img" src="" alt="Thumbnail" />
+            <button class="gen-btn" onclick="genThumbnail()">⚡ Generate</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Auto-generates a thumbnail by capturing a frame from your video URL</div>
+        </div>
+
+        <!-- URL Input -->
+        <div id="thumb-url-section" style="display:none">
+          <input class="form-input" type="text" id="v-thumb-url" placeholder="https://images.unsplash.com/…" oninput="previewThumbUrl()" />
+          <div class="thumb-preview" style="margin-top:10px">
+            <img id="thumb-url-img" src="" alt="" />
+            <span id="thumb-url-placeholder">Paste a thumbnail URL above</span>
+          </div>
+        </div>
+
+        <!-- Upload -->
+        <div id="thumb-upload-section" style="display:none">
+          <div class="drop-zone" id="thumb-drop">
+            <input type="file" accept="image/*" id="thumb-file" onchange="handleThumbUpload(event)" />
+            <div class="drop-icon">🖼</div>
+            <div class="drop-text"><strong>Click to upload</strong> or drag & drop</div>
+            <div class="drop-note">PNG, JPG up to 5MB</div>
+          </div>
+          <div class="thumb-preview" style="margin-top:10px;display:none" id="thumb-upload-preview">
+            <img id="thumb-upload-img" src="" alt="" style="display:block" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button class="submit-btn" id="submit-btn" onclick="submitVideo()">🚀 Upload Video</button>
+      <div id="upload-success">✅ Video uploaded successfully! Visible on the homepage.</div>
+    </div>
+  </div>
+
+  <!-- Right: Video List -->
+  <div>
+    <div class="panel-title">Published Videos</div>
+    <div class="video-list-panel">
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">Total Videos</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="stat-views">0</div>
+          <div class="stat-label">Total Views</div>
+        </div>
+      </div>
+
+      <div id="admin-video-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Hidden video for thumbnail generation -->
+<video id="hidden-video" style="display:none" crossorigin="anonymous" preload="metadata"></video>
+<canvas id="thumb-canvas" style="display:none"></canvas>
+
+<script>
+/* ── AUTH ── */
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'admin123';
+const SESSION_KEY = 'igviral_admin_session';
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    localStorage.setItem(SESSION_KEY, 'true');
+    document.getElementById('login-overlay').classList.add('hidden');
+    renderAdminList();
+  } else {
+    document.getElementById('login-error').classList.add('show');
+    document.getElementById('login-pass').value = '';
+  }
+}
+
+function logout() {
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('login-overlay').classList.remove('hidden');
+}
+
+function checkSession() {
+  if (localStorage.getItem(SESSION_KEY) === 'true') {
+    document.getElementById('login-overlay').classList.add('hidden');
+    renderAdminList();
+  }
+}
+
+/* ── DATA ── */
+const STORAGE_KEY = 'igviral_videos';
+
+function getVideos() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) return JSON.parse(raw);
+  return [
+    { id:'1', title:'Epic Skateboard Trick Goes Viral 🛹', category:'Trending', views:'2.4M', duration:'1:32', date:'2 hours ago', thumb:'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'2', title:'Funniest Pet Compilation 2025 😂', category:'Funny', views:'5.1M', duration:'3:48', date:'5 hours ago', thumb:'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'3', title:'Unbelievable Last-Minute Goal — World Cup Qualifier', category:'Sports', views:'8.9M', duration:'0:47', date:'1 day ago', thumb:'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'4', title:'New Artist Drops Insane Beat — Music Video', category:'Music', views:'1.3M', duration:'4:12', date:'3 days ago', thumb:'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'5', title:'AI Robot Does Something Incredible', category:'Tech', views:'3.7M', duration:'2:05', date:'4 days ago', thumb:'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'6', title:'Satisfying Food Compilation 🍜 ASMR', category:'Lifestyle', views:'920K', duration:'6:30', date:'5 days ago', thumb:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'7', title:'Street Basketball Insane Dunks 🏀', category:'Sports', views:'4.2M', duration:'2:58', date:'6 days ago', thumb:'https://images.unsplash.com/photo-1546519638399-1274d887159f?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' },
+    { id:'8', title:'Tesla FSD Nearly Perfect Autopilot Drive', category:'Tech', views:'2.1M', duration:'5:44', date:'1 week ago', thumb:'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&q=80', src:'https://www.w3schools.com/html/mov_bbb.mp4' }
+  ];
+}
+
+function saveVideos(videos) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
+}
+
+/* ── THUMBNAIL MODES ── */
+let thumbMode = 'auto';
+let thumbData = '';
+
+function setThumbMode(mode) {
+  thumbMode = mode;
+  ['auto','url','upload'].forEach(m => {
+    document.getElementById(`thumb-opt-${m}`).classList.toggle('active', m === mode);
+    document.getElementById(`thumb-${m}-section`).style.display = m === mode ? 'block' : 'none';
+  });
+  thumbData = '';
+}
+
+function previewThumbUrl() {
+  const url = document.getElementById('v-thumb-url').value;
+  const img = document.getElementById('thumb-url-img');
+  const ph = document.getElementById('thumb-url-placeholder');
+  if (url) {
+    img.src = url;
+    img.style.display = 'block';
+    ph.style.display = 'none';
+    thumbData = url;
+  }
+}
+
+function handleThumbUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    thumbData = ev.target.result;
+    const preview = document.getElementById('thumb-upload-preview');
+    const img = document.getElementById('thumb-upload-img');
+    preview.style.display = 'block';
+    img.src = thumbData;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ── AUTO THUMBNAIL GENERATION ── */
+function genThumbnail() {
+  const src = document.getElementById('v-src').value.trim();
+  if (!src) { alert('Please enter a video URL first.'); return; }
+  const vid = document.getElementById('hidden-video');
+  const canvas = document.getElementById('thumb-canvas');
+  const ph = document.getElementById('thumb-placeholder');
+  ph.textContent = '⏳ Generating…';
+  vid.src = src;
+  vid.currentTime = 2;
+  vid.addEventListener('seeked', function capture() {
+    try {
+      canvas.width = vid.videoWidth || 320;
+      canvas.height = vid.videoHeight || 180;
+      canvas.getContext('2d').drawImage(vid, 0, 0);
+      thumbData = canvas.toDataURL('image/jpeg', 0.85);
+      const img = document.getElementById('thumb-img');
+      img.src = thumbData;
+      img.classList.add('show');
+      ph.style.display = 'none';
+    } catch(e) {
+      ph.textContent = '⚠️ Could not generate (CORS). Use URL mode.';
+    }
+    vid.removeEventListener('seeked', capture);
+  }, { once: true });
+}
+
+/* ── TEST VIDEO URL ── */
+function testVideoURL() {
+  const src = document.getElementById('v-src').value.trim();
+  if (!src) { alert('Enter a video URL first.'); return; }
+  const win = window.open('', '_blank', 'width=640,height=400');
+  win.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#000">
+    <video src="${src}" controls autoplay style="width:100%;height:100vh"></video>
+    </body></html>`);
+}
+
+/* ── SUBMIT ── */
+function submitVideo() {
+  const title = document.getElementById('v-title').value.trim();
+  const category = document.getElementById('v-category').value;
+  const src = document.getElementById('v-src').value.trim();
+  const duration = document.getElementById('v-duration').value.trim() || '0:00';
+
+  if (!title || !category || !src) {
+    alert('⚠️ Please fill in Title, Category, and Video URL.');
+    return;
+  }
+
+  // Determine thumbnail
+  let thumb = thumbData;
+  if (!thumb) {
+    if (thumbMode === 'url') thumb = document.getElementById('v-thumb-url').value.trim();
+    if (!thumb) thumb = `https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=600&q=80`;
+  }
+
+  const videos = getVideos();
+  const newId = Date.now().toString();
+  const desc = document.getElementById('v-desc').value.trim() || 'Watch this viral video on IG Viral Video!';
+
+  videos.unshift({
+    id: newId,
+    title,
+    category,
+    src,
+    thumb,
+    duration,
+    views: '0',
+    date: 'Just now',
+    desc
+  });
+
+  saveVideos(videos);
+
+  // Show success
+  document.getElementById('upload-success').classList.add('show');
+  document.getElementById('submit-btn').disabled = true;
+
+  setTimeout(() => {
+    document.getElementById('upload-success').classList.remove('show');
+    document.getElementById('submit-btn').disabled = false;
+    resetForm();
+    renderAdminList();
+  }, 2500);
+}
+
+function resetForm() {
+  ['v-title','v-src','v-duration','v-desc','v-thumb-url'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('v-category').value = '';
+  thumbData = '';
+  setThumbMode('auto');
+  document.getElementById('thumb-img').classList.remove('show');
+  document.getElementById('thumb-placeholder').textContent = '🖼 Auto-generated from video frame';
+  document.getElementById('thumb-placeholder').style.display = '';
+}
+
+/* ── ADMIN LIST ── */
+function renderAdminList() {
+  const videos = getVideos();
+  const list = document.getElementById('admin-video-list');
+  document.getElementById('stat-total').textContent = videos.length;
+  document.getElementById('stat-views').textContent = videos.length > 0 ? '∞' : '0';
+
+  if (videos.length === 0) {
+    list.innerHTML = '<div class="empty-list">No videos yet. Upload your first video!</div>';
+    return;
+  }
+
+  list.innerHTML = videos.map(v => `
+    <div class="admin-video-item">
+      <div class="admin-thumb">
+        <img src="${v.thumb}" alt="${v.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/100x56/16161f/444?text=Vid'" />
+      </div>
+      <div class="admin-item-info">
+        <div class="admin-item-title">${v.title}</div>
+        <div class="admin-item-meta">${v.category} · ${v.duration} · ${v.date}</div>
+        <div class="admin-item-actions">
+          <button class="admin-btn-sm view" onclick="window.open('player.html?id=${v.id}','_blank')">▶ View</button>
+          <button class="admin-btn-sm del" onclick="deleteVideo('${v.id}')">🗑 Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteVideo(id) {
+  if (!confirm('Delete this video? This cannot be undone.')) return;
+  let videos = getVideos();
+  videos = videos.filter(v => v.id !== id);
+  saveVideos(videos);
+  renderAdminList();
+}
+
+/* ── DRAG & DROP ── */
+const dropZone = document.getElementById('thumb-drop');
+if (dropZone) {
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        thumbData = ev.target.result;
+        document.getElementById('thumb-upload-preview').style.display = 'block';
+        document.getElementById('thumb-upload-img').src = thumbData;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', checkSession);
+</script>
+</body>
+</html>

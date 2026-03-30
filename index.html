@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IG VIRAL VIDEO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #0a0a0f;
+      --bg-card: #111118;
+      --bg-surface: #16161f;
+      --accent: #ff2d55;
+      --accent-glow: rgba(255, 45, 85, 0.35);
+      --accent2: #ff6b00;
+      --text-primary: #f0f0f5;
+      --text-muted: #888898;
+      --border: rgba(255,255,255,0.07);
+      --radius: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── ADBLOCK OVERLAY ── */
+    #adblock-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(10,10,15,0.97);
+      z-index: 9999;
+      align-items: center; justify-content: center;
+      flex-direction: column; text-align: center; padding: 24px;
+    }
+    #adblock-overlay.show { display: flex; }
+    .adblock-icon { font-size: 64px; margin-bottom: 20px; }
+    .adblock-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(28px, 6vw, 48px);
+      color: var(--accent); letter-spacing: 2px; margin-bottom: 12px;
+    }
+    .adblock-desc {
+      font-size: 16px; color: var(--text-muted); max-width: 480px; line-height: 1.6; margin-bottom: 28px;
+    }
+    .adblock-steps {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 28px; text-align: left; margin-bottom: 24px;
+    }
+    .adblock-steps li { color: var(--text-primary); margin: 8px 0; font-size: 15px; }
+    .btn-retry {
+      background: var(--accent); color: #fff; border: none;
+      padding: 12px 36px; border-radius: 50px; font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: 'Barlow', sans-serif;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-retry:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px; letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+    }
+    .nav-logo span { color: #fff; -webkit-text-fill-color: #fff; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-search {
+      display: flex; align-items: center;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 50px; padding: 6px 14px; gap: 8px;
+      transition: border-color 0.2s;
+    }
+    .nav-search:focus-within { border-color: var(--accent); }
+    .nav-search input {
+      background: none; border: none; outline: none;
+      color: var(--text-primary); font-family: 'Barlow', sans-serif;
+      font-size: 14px; width: 160px;
+    }
+    .nav-search input::placeholder { color: var(--text-muted); }
+    .search-icon { color: var(--text-muted); font-size: 14px; }
+    .nav-admin {
+      background: none; border: 1px solid var(--border);
+      color: var(--text-muted); padding: 6px 16px; border-radius: 50px;
+      font-size: 13px; cursor: pointer; font-family: 'Barlow', sans-serif;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .nav-admin:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── AD BANNER ── */
+    .ad-banner {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      font-size: 13px; color: var(--text-muted);
+    }
+    .ad-banner-inner {
+      background: linear-gradient(90deg, #1a1a28, #16161f);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 24px; text-align: center;
+      width: 100%; max-width: 728px; min-height: 56px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: var(--text-muted);
+    }
+    .ad-label {
+      font-size: 10px; color: var(--text-muted);
+      border: 1px solid var(--border); padding: 1px 6px; border-radius: 3px;
+      margin-right: 8px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      background: linear-gradient(180deg, rgba(255,45,85,0.08) 0%, transparent 100%);
+      padding: 48px 24px 32px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(255,45,85,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,45,85,0.12); border: 1px solid rgba(255,45,85,0.25);
+      color: var(--accent); font-size: 12px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 50px; margin-bottom: 16px;
+    }
+    .hero-eyebrow::before { content: '●'; font-size: 8px; animation: blink 1.4s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(40px, 8vw, 72px);
+      letter-spacing: 4px;
+      line-height: 1;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub { color: var(--text-muted); font-size: 15px; margin-top: 10px; }
+
+    /* ── FILTER TABS ── */
+    .filter-bar {
+      padding: 20px 24px 0;
+      display: flex; gap: 10px; overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-tab {
+      flex-shrink: 0;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      color: var(--text-muted); padding: 7px 18px; border-radius: 50px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      font-family: 'Barlow', sans-serif;
+      transition: all 0.2s;
+    }
+    .filter-tab:hover, .filter-tab.active {
+      background: var(--accent); border-color: var(--accent);
+      color: #fff; box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    /* ── SECTION ── */
+    .section {
+      padding: 28px 24px;
+    }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px; letter-spacing: 2px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::before {
+      content: '';
+      display: block; width: 4px; height: 22px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      border-radius: 2px;
+    }
+    .see-all {
+      font-size: 13px; color: var(--accent); text-decoration: none;
+      font-weight: 500; transition: opacity 0.2s;
+    }
+    .see-all:hover { opacity: 0.7; }
+
+    /* ── VIDEO GRID ── */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .video-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      text-decoration: none; color: inherit;
+      display: block;
+    }
+    .video-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,45,85,0.2);
+      border-color: rgba(255,45,85,0.2);
+    }
+
+    .thumb-wrap {
+      position: relative; aspect-ratio: 16/9; overflow: hidden;
+      background: #0d0d16;
+    }
+    .thumb-wrap img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.4s;
+    }
+    .video-card:hover .thumb-wrap img { transform: scale(1.06); }
+
+    .play-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0);
+      transition: background 0.25s;
+    }
+    .video-card:hover .play-overlay { background: rgba(0,0,0,0.35); }
+    .play-btn-circle {
+      width: 52px; height: 52px;
+      background: rgba(255,45,85,0.9);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: scale(0.7);
+      transition: opacity 0.25s, transform 0.25s;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+    .video-card:hover .play-btn-circle { opacity: 1; transform: scale(1); }
+    .play-btn-circle svg { width: 20px; height: 20px; fill: #fff; margin-left: 3px; }
+
+    .duration-badge {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(0,0,0,0.82); color: #fff;
+      font-size: 11px; font-weight: 600; padding: 2px 7px;
+      border-radius: 4px; letter-spacing: 0.5px;
+    }
+
+    .category-badge {
+      position: absolute; top: 8px; left: 8px;
+      background: var(--accent); color: #fff;
+      font-size: 10px; font-weight: 700; padding: 3px 9px;
+      border-radius: 50px; letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    .card-info { padding: 14px; }
+    .card-title {
+      font-size: 15px; font-weight: 600; line-height: 1.4;
+      margin-bottom: 8px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .card-views { display: flex; align-items: center; gap: 5px; }
+    .card-views svg { width: 12px; height: 12px; fill: var(--text-muted); }
+
+    /* ── NO RESULTS ── */
+    .empty-state {
+      text-align: center; padding: 80px 24px; color: var(--text-muted);
+    }
+    .empty-state-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-state h3 { font-size: 20px; color: var(--text-primary); margin-bottom: 8px; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── SCROLL TO TOP ── */
+    #scroll-top {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 44px; height: 44px;
+      background: var(--accent); border: none; border-radius: 50%;
+      color: #fff; font-size: 18px; cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px var(--accent-glow);
+      z-index: 500; transition: transform 0.2s;
+    }
+    #scroll-top.show { display: flex; }
+    #scroll-top:hover { transform: scale(1.1); }
+
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; }
+      .nav-search { display: none; }
+      .section { padding: 20px 16px; }
+      .video-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .card-title { font-size: 13px; }
+    }
+    @media (max-width: 380px) {
+      .video-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Adblock Overlay -->
+<div id="adblock-overlay">
+  <div class="adblock-icon">🚫</div>
+  <div class="adblock-title">Ad Blocker Detected</div>
+  <p class="adblock-desc">We rely on ads to keep this platform free. Please disable your ad blocker to continue watching videos.</p>
+  <div class="adblock-steps">
+    <ol style="padding-left:18px">
+      <li>Click the ad blocker icon in your browser toolbar</li>
+      <li>Select "Disable on this site" or "Pause"</li>
+      <li>Refresh the page</li>
+    </ol>
+  </div>
+  <button class="btn-retry" onclick="checkAdBlock()">✓ I've disabled it — Retry</button>
+</div>
+
+<!-- Navigation -->
+<nav>
+  <a href="index.html" class="nav-logo">IG<span>·</span>VIRAL<span style="font-size:14px;letter-spacing:1px">VIDEO</span></a>
+  <div class="nav-right">
+    <div class="nav-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search videos…" oninput="filterVideos()" />
+    </div>
+    <a href="admin.html" class="nav-admin">⚙ Admin</a>
+  </div>
+</nav>
+
+<!-- Ad Banner (Header) -->
+<div class="ad-banner" id="ad-header">
+  <div class="ad-banner-inner">
+    <span class="ad-label">AD</span>
+    Advertisement · <em style="font-style:normal;color:var(--text-primary);margin-left:6px">Your Banner Ad Space — 728×90</em>
+  </div>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-eyebrow">Live & Trending Now</div>
+  <h1>Watch <em>Viral</em> Videos</h1>
+  <p class="hero-sub">The hottest clips from across the internet — curated daily.</p>
+</div>
+
+<!-- Filter Tabs -->
+<div class="filter-bar">
+  <button class="filter-tab active" onclick="setCategory('All', this)">🔥 All</button>
+  <button class="filter-tab" onclick="setCategory('Trending', this)">📈 Trending</button>
+  <button class="filter-tab" onclick="setCategory('Funny', this)">😂 Funny</button>
+  <button class="filter-tab" onclick="setCategory('Sports', this)">⚽ Sports</button>
+  <button class="filter-tab" onclick="setCategory('Music', this)">🎵 Music</button>
+  <button class="filter-tab" onclick="setCategory('Tech', this)">💻 Tech</button>
+  <button class="filter-tab" onclick="setCategory('Lifestyle', this)">✨ Lifestyle</button>
+</div>
+
+<!-- Main Grid -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title" id="grid-title">All Videos</div>
+    <span style="font-size:13px;color:var(--text-muted)" id="video-count"></span>
+  </div>
+  <div class="video-grid" id="video-grid"></div>
+  <div class="empty-state" id="empty-state" style="display:none">
+    <div class="empty-state-icon">📭</div>
+    <h3>No Videos Found</h3>
+    <p>Try a different search or category.</p>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <p style="margin-bottom:8px">
+    <a href="index.html">Home</a> &nbsp;·&nbsp;
+    <a href="admin.html">Admin</a> &nbsp;·&nbsp;
+    <span>© 2025 IG Viral Video</span>
+  </p>
+  <p>Powered by Cloudinary &amp; HTML5</p>
+</footer>
+
+<!-- Scroll to Top -->
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+/* ── DATA STORE ── */
+const STORAGE_KEY = 'igviral_videos';
+
+function getVideos() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) return JSON.parse(raw);
+  // Default sample videos (using royalty-free Cloudinary demo URLs)
+  return [
+    {
+      id: '1', title: 'Epic Skateboard Trick Goes Viral 🛹',
+      category: 'Trending', views: '2.4M', duration: '1:32',
+      date: '2 hours ago',
+      thumb: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80',
+      src: 'https://www.w3schools.com/html/mov_bbb.mp4'
+    },
+    {
+      id: '2', title: 'Funniest Pet Compilation 2025 😂',
+      category: 'Funny', views: '5.1M', duration: '3:48',
+      date: '5 hours ago',
+      thumb: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80',
+      src: 'https://www.w3schools.com/html/mov_bbb.mp4'
+    },
+    {
+      id: '3', title: 'Unbelievable Last-Minute Goal — World Cup Qualifier',
+      category: 'Sports', views: '8.9M', duration: '0:47',
+      date: '1 day ago',
+      thumb: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&q=80',
+      src: 'https://www.w3schools.com/html/mov_bbb.mp4'
+    },
+    {
+      id: '4', title: 'New Artist Drops Insane Beat — Music Video',
+      category: 'Music', views: '1.3M', duration: '4:12',
+      date: '3 days ago',
+      thumb: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&q=80',
+      src: 'https://www.w3schools.com/html/mov_bbb.mp4'
+    },
+    {
+      id: '5', title: 'AI Robot Does Something Incredible — Watch Till End',
+      category: 'Tech', views: '3.7M', duration: '2:05',
+      date: '4 days ago',
+      thumb: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80',
+      src: 'https://www.w3schools.com/html/mov_bbb.mp4'
+    },
+    {
+      id: '6', title: 'Satisfying Food Compilation 🍜 ASMR Cooking',
+      category: 'Lifestyle', views: '920K', duration: '6:30',
+      date: '5 days ago',
+      thumb: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
+      src: 'https://www.w3schools.com/html/mov_bbb.mp4'
+    },
+    {
+      id: '7', title: 'Street Basketball Insane Dunks 🏀',
+      category: 'Sports', views: '4.2M', duration: '2:58',
+      date: '6 days ago',
+      thumb: 'https://images.unsplash.com/photo-1546519638399-1274d887159f?w=600&q=80',
+      src: 'https://www.w3schools.com/html/mov_bbb.mp4'
+    },
+    {
+      id: '8', title: 'Tesla FSD Nearly Perfect Autopilot Drive 🚗',
+      category: 'Tech', views: '2.1M', duration: '5:44',
+      date: '1 week ago',
+      thumb: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&q=80',
+      src: 'https://www.w3schools.com/html/mov_bbb.mp4'
+    }
+  ];
+}
+
+/* ── STATE ── */
+let currentCategory = 'All';
+let currentSearch = '';
+
+function setCategory(cat, btn) {
+  currentCategory = cat;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('grid-title').textContent = cat === 'All' ? 'All Videos' : cat;
+  renderGrid();
+}
+
+function filterVideos() {
+  currentSearch = document.getElementById('search-input').value.toLowerCase();
+  renderGrid();
+}
+
+function renderGrid() {
+  const videos = getVideos();
+  let filtered = videos.filter(v => {
+    const matchCat = currentCategory === 'All' || v.category === currentCategory;
+    const matchSearch = !currentSearch || v.title.toLowerCase().includes(currentSearch) || v.category.toLowerCase().includes(currentSearch);
+    return matchCat && matchSearch;
+  });
+
+  const grid = document.getElementById('video-grid');
+  const empty = document.getElementById('empty-state');
+  document.getElementById('video-count').textContent = `${filtered.length} video${filtered.length !== 1 ? 's' : ''}`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = filtered.map(v => `
+    <a class="video-card" href="player.html?id=${v.id}" onclick="trackView('${v.id}')">
+      <div class="thumb-wrap">
+        <img src="${v.thumb}" alt="${v.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x338/111118/444?text=Video'" />
+        <div class="play-overlay">
+          <div class="play-btn-circle">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <span class="duration-badge">${v.duration}</span>
+        <span class="category-badge">${v.category}</span>
+      </div>
+      <div class="card-info">
+        <div class="card-title">${v.title}</div>
+        <div class="card-meta">
+          <div class="card-views">
+            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            ${v.views}
+          </div>
+          <span>${v.date}</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+function trackView(id) {
+  // Optionally increment view count in localStorage
+}
+
+/* ── ADBLOCK DETECTION ── */
+function checkAdBlock() {
+  const testAd = document.createElement('div');
+  testAd.innerHTML = '&nbsp;';
+  testAd.className = 'adsbox ad-slot pub_300x250';
+  testAd.style.cssText = 'width:1px;height:1px;position:absolute;left:-9999px';
+  document.body.appendChild(testAd);
+  setTimeout(() => {
+    const blocked = testAd.offsetHeight === 0 || testAd.offsetWidth === 0 ||
+      window.getComputedStyle(testAd).display === 'none' ||
+      window.getComputedStyle(testAd).visibility === 'hidden';
+    document.body.removeChild(testAd);
+    if (blocked) {
+      document.getElementById('adblock-overlay').classList.add('show');
+    } else {
+      document.getElementById('adblock-overlay').classList.remove('show');
+    }
+  }, 200);
+}
+
+/* ── SCROLL TO TOP ── */
+window.addEventListener('scroll', () => {
+  document.getElementById('scroll-top').classList.toggle('show', window.scrollY > 300);
+});
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', () => {
+  renderGrid();
+  setTimeout(checkAdBlock, 500);
+});
+</script>
+</body>
+</html>
